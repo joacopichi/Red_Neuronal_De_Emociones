@@ -5,21 +5,6 @@
 Este proyecto implementa una red neuronal simple para la clasificación de emociones en frases en español. Utiliza Python, TensorFlow y Programación Orientada a Objetos (POO) para estructurar el código en servicios y modelos reutilizables.  
 El sistema puede predecir emociones como **ira, tristeza, felicidad, sorpresa, miedo** y **neutral** a partir de texto ingresado por el usuario. Además, permite corregir manualmente las predicciones y reentrenar el modelo en tiempo real con los nuevos ejemplos.
 
-## Estructura del proyecto
-Red_Neuronal_De_Emociones/
-│
-├── requirements.txt
-├── README.md
-└── src/
-    └── emotion_classifier/
-        ├── main.py
-        ├── model/
-        │   └── emotion_model.py
-        ├── services/
-        │   └── predictor_service.py
-        └── data/
-            └── corrections.json
-
 ## Cómo ejecutar el proyecto
 1. **Instala las dependencias**  
    Abre una terminal en la carpeta raíz del proyecto y ejecuta:
