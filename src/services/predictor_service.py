@@ -1,4 +1,4 @@
-from emotion_classifier.model.emotion_model import EmotionModel
+from model.emotion_model import EmotionModel
 import numpy as np
 import json
 import os

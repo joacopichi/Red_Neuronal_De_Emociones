@@ -1,6 +1,6 @@
 from tensorflow.keras.preprocessing.text import Tokenizer
 from tensorflow.keras.preprocessing.sequence import pad_sequences
-from emotion_classifier.config import VOCAB_SIZE, MAX_LEN
+from config import VOCAB_SIZE, MAX_LEN
 
 class TokenizerManager:
     def __init__(self, frases):

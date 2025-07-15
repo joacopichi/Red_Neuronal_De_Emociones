@@ -1,7 +1,7 @@
 import threading
 import time
 import os
-from emotion_classifier.services.predictor_service import PredictorService
+from services.predictor_service import PredictorService
 
 def entrenamiento_automatico(ps, path, intervalo=10):
     """Entrena el modelo solo si el archivo de correcciones cambia."""
