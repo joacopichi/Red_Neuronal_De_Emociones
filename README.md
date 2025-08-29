@@ -16,7 +16,7 @@ El sistema puede predecir emociones como **ira, tristeza, felicidad, sorpresa, m
    Cambia al directorio `src` y ejecuta el archivo principal como módulo:
    ```sh
    cd src
-   python -m emotion_classifier.main
+   python -m main
    ```
 
 3. **Uso**  
