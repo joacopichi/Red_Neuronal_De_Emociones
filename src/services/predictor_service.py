@@ -1,60 +1,99 @@
+from sqlalchemy.orm import Session
+from db.database import db_singleton
+from repositories.emotion_repository import EmotionRepository
+from services.feedback_service import FeedbackService
+
+from data.base_data import BaseDataManager
+from model.tokenizer_manager import TokenizerManager
 from model.emotion_model import EmotionModel
+from config import CLASSES, CLASSES_REVERSE, MAX_LEN
+
 import numpy as np
-import json
-import os
+
+LABELS = ["ira", "tristeza", "felicidad", "sorpresa", "miedo", "neutral"]
 
 class PredictorService:
     def __init__(self):
-        self.model = EmotionModel()
-        self.corrections_path = os.path.join(os.path.dirname(__file__), '..', 'data', 'corrections.json')
-        if not os.path.exists(self.corrections_path):
-            with open(self.corrections_path, "w") as f:
-                json.dump([], f)
-        # Entrenamiento inicial con todas las correcciones
-        with open(self.corrections_path, "r") as f:
-            data = json.load(f)
-        if data:
-            X, y = self._preparar_datos(data)
-            self.model.train(X, y)
+        self.db: Session = db_singleton.get_session()
+        self.pred_repo = EmotionRepository(self.db)
+        self.feedback = FeedbackService(self.db)
 
-    def vectorize(self, text):
-        """Convierte el texto en un vector numérico fijo."""
-        vec = [ord(c) for c in text][:100]
-        vec += [0] * (100 - len(vec))
-        return vec
+        # datos base + tokenizador
+        self.base = BaseDataManager()
+        frases_base, y_base_idx = self.base.obtener_datos()
+        self.tokenizer = TokenizerManager(frases_base)
 
-    def predecir(self, texto):
-        """Predice la emoción y confianza para un texto dado."""
-        vector = self.vectorize(texto)
-        emocion, confianza = self.model.predict(vector)
-        return emocion, confianza
+        # modelo de emociones
+        self.model = EmotionModel(
+            vocab_size=self.tokenizer.tokenizer.num_words,
+            num_classes=len(LABELS),
+            max_len=MAX_LEN
+        )
 
-    def corregir(self, texto, emocion_correcta):
-        """Guarda la corrección y reentrena el modelo con todas las correcciones."""
-        with open(self.corrections_path, "r") as f:
-            data = json.load(f)
-        data.append({"texto": texto, "emocion": emocion_correcta})
-        with open(self.corrections_path, "w") as f:
-            json.dump(data, f)
-        # Reentrena con todas las correcciones
-        X, y = self._preparar_datos(data)
-        self.model.train(X, y)
+        # entrenamiento inicial rápido con base
+        Xb = self.tokenizer.preparar(frases_base)
+        yb = np.array(y_base_idx, dtype=np.int32)
+        self.model.train(Xb, yb, epochs=3)
 
-    def entrenar_con_correcciones(self, epochs=10):
-        """Entrena el modelo con todas las correcciones guardadas."""
-        with open(self.corrections_path, "r") as f:
-            data = json.load(f)
-        if data:
-            X, y = self._preparar_datos(data)
+        # si hay correcciones previas, ajustamos
+        self.entrenar_con_correcciones(epochs=2)
+
+    def predecir(self, texto: str):
+        seq = self.tokenizer.preparar([texto])
+        probs = self.model.predict_proba(seq)[0]
+        idx = int(np.argmax(probs))
+        pred = LABELS[idx]
+        conf = float(probs[idx])
+
+        # persistimos la predicción en BD
+        self.pred_repo.save_prediction(text=texto, predicted=pred, confidence=conf)
+        return pred, conf
+
+    def corregir(self, texto: str, emocion_correcta: str):
+        # guarda feedback en BD
+        self.feedback.submit(texto, emocion_correcta)
+        # reentrenamiento corto inmediato
+        self.entrenar_con_correcciones(epochs=2)
+
+    def entrenar_con_correcciones(self, epochs=3, reentrenar_desde_cero=False):
+        """
+        Reentrena el modelo con los datos de feedback de la BD.
+        Si reentrenar_desde_cero=True, el modelo se reinicia y se entrena desde cero
+        usando base_data + feedback acumulado.
+        """
+        pares = self.feedback.dataset()  # [(texto, label), ...]
+        if not pares:
+            print("⚠️ No hay datos de feedback para reentrenar.")
+            return
+
+        textos = [t for t, _ in pares]
+        labels = [CLASSES_REVERSE.get(l, 5) for _, l in pares]  # default neutral si no mapea
+
+        if reentrenar_desde_cero:
+            print("🔄 Reentrenando modelo desde cero con base + feedback...")
+            # regeneramos modelo y tokenizador
+            frases_base, y_base_idx = self.base.obtener_datos()
+            self.tokenizer = TokenizerManager(frases_base + textos)
+
+            self.model = EmotionModel(
+                vocab_size=self.tokenizer.tokenizer.num_words,
+                num_classes=len(LABELS),
+                max_len=MAX_LEN
+            )
+
+            # unimos base + feedback
+            X_base = self.tokenizer.preparar(frases_base)
+            y_base = np.array(y_base_idx, dtype=np.int32)
+
+            X_feedback = self.tokenizer.preparar(textos)
+            y_feedback = np.array(labels, dtype=np.int32)
+
+            X = np.concatenate([X_base, X_feedback], axis=0)
+            y = np.concatenate([y_base, y_feedback], axis=0)
+
             self.model.train(X, y, epochs=epochs)
-
-    def _preparar_datos(self, data):
-        """Prepara los datos X e y a partir de una lista de ejemplos."""
-        X = [self.vectorize(d["texto"]) for d in data]
-        y = []
-        for d in data:
-            label = [0] * len(self.model.labels)
-            idx = self.model.labels.index(d["emocion"])
-            label[idx] = 1
-            y.append(label)
-        return X, y
+        else:
+            # solo entrenamos con feedback nuevo
+            X = self.tokenizer.preparar(textos)
+            y = np.array(labels, dtype=np.int32)
+            self.model.train(X, y, epochs=epochs)
