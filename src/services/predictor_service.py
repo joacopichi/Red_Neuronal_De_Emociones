@@ -9,8 +9,10 @@ from model.emotion_model import EmotionModel
 from config import CLASSES, CLASSES_REVERSE, MAX_LEN
 
 import numpy as np
+import os
 
 LABELS = ["ira", "tristeza", "felicidad", "sorpresa", "miedo", "neutral"]
+
 
 class PredictorService:
     def __init__(self):
@@ -18,24 +20,30 @@ class PredictorService:
         self.pred_repo = EmotionRepository(self.db)
         self.feedback = FeedbackService(self.db)
 
-        # datos base + tokenizador
+        # Datos base
         self.base = BaseDataManager()
         frases_base, y_base_idx = self.base.obtener_datos()
-        self.tokenizer = TokenizerManager(frases_base)
 
-        # modelo de emociones
+        # --- Tokenizer ---
+        self.tokenizer = TokenizerManager()  # intenta cargar desde saved
+        if self.tokenizer.tokenizer is None:
+            print("🚀 Creando y entrenando nuevo Tokenizer...")
+            self.tokenizer = TokenizerManager(frases_base)
+
+        # --- Modelo ---
         self.model = EmotionModel(
             vocab_size=self.tokenizer.tokenizer.num_words,
             num_classes=len(LABELS),
             max_len=MAX_LEN
         )
 
-        # entrenamiento inicial rápido con base
-        Xb = self.tokenizer.preparar(frases_base)
-        yb = np.array(y_base_idx, dtype=np.int32)
-        self.model.train(Xb, yb, epochs=3)
+        if not os.path.exists("saved/model.keras"):
+            print("🚀 Entrenando modelo por primera vez con datos base...")
+            Xb = self.tokenizer.preparar(frases_base)
+            yb = np.array(y_base_idx, dtype=np.int32)
+            self.model.train(Xb, yb, epochs=3)
 
-        # si hay correcciones previas, ajustamos
+        # Ajustar con feedback acumulado
         self.entrenar_con_correcciones(epochs=2)
 
     def predecir(self, texto: str):
@@ -45,14 +53,14 @@ class PredictorService:
         pred = LABELS[idx]
         conf = float(probs[idx])
 
-        # persistimos la predicción en BD
+        # Guardar predicción en BD
         self.pred_repo.save_prediction(text=texto, predicted=pred, confidence=conf)
         return pred, conf
 
     def corregir(self, texto: str, emocion_correcta: str):
-        # guarda feedback en BD
+        # Guardar feedback en BD
         self.feedback.submit(texto, emocion_correcta)
-        # reentrenamiento corto inmediato
+        # Reentrenamiento corto inmediato
         self.entrenar_con_correcciones(epochs=2)
 
     def entrenar_con_correcciones(self, epochs=3, reentrenar_desde_cero=False):
@@ -71,7 +79,7 @@ class PredictorService:
 
         if reentrenar_desde_cero:
             print("🔄 Reentrenando modelo desde cero con base + feedback...")
-            # regeneramos modelo y tokenizador
+
             frases_base, y_base_idx = self.base.obtener_datos()
             self.tokenizer = TokenizerManager(frases_base + textos)
 
@@ -81,7 +89,7 @@ class PredictorService:
                 max_len=MAX_LEN
             )
 
-            # unimos base + feedback
+            # Unimos base + feedback
             X_base = self.tokenizer.preparar(frases_base)
             y_base = np.array(y_base_idx, dtype=np.int32)
 
@@ -93,7 +101,8 @@ class PredictorService:
 
             self.model.train(X, y, epochs=epochs)
         else:
-            # solo entrenamos con feedback nuevo
+            # Solo entrenamos con feedback nuevo
+            print("📈 Ajustando modelo con feedback...")
             X = self.tokenizer.preparar(textos)
             y = np.array(labels, dtype=np.int32)
             self.model.train(X, y, epochs=epochs)

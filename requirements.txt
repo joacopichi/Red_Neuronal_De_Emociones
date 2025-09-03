@@ -1,3 +1,5 @@
 tensorflow
 numpy
 sqlalchemy>=1.4
+scikit-learn
+pandas
