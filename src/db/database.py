@@ -1,28 +1,44 @@
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, scoped_session, declarative_base
-from config import DATABASE_URL
-import threading
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker, Session
+from typing import Generator
+
+DATABASE_URL = "sqlite:///./src/red_emociones.db"
+
+engine = create_engine(
+    DATABASE_URL,
+    connect_args={"check_same_thread": False}
+)
+
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 Base = declarative_base()
 
-class DatabaseSingleton:
-    _instance = None
-    _lock = threading.Lock()
+def get_db() -> Generator[Session, None, None]:
+    """
+    Dependency function para FastAPI
+    """
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
 
-    def __new__(cls):
-        if not cls._instance:
-            with cls._lock:
-                if not cls._instance:
-                    cls._instance = super().__new__(cls)
-                    cls._instance._init_engine()
-        return cls._instance
+def init_database():
+    """
+    Inicializa la base de datos creando todas las tablas
+    """
+    Base.metadata.create_all(bind=engine)
 
-    def _init_engine(self):
-        # future=True para SQLAlchemy moderno; echo=False para no spamear logs
-        self.engine = create_engine(DATABASE_URL, echo=False, future=True)
-        self.SessionLocal = scoped_session(sessionmaker(bind=self.engine, autoflush=False, autocommit=False))
+class Database:
+    def __init__(self):
+        self._engine = engine
+        self._SessionLocal = SessionLocal
 
-    def get_session(self):
-        return self.SessionLocal()
+    def get_session(self) -> Session:
+        """
+        Retorna una sesión de base de datos (para servicios)
+        """
+        return self._SessionLocal()
 
-db_singleton = DatabaseSingleton()
+db_singleton = Database()
