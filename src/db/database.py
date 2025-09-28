@@ -1,9 +1,11 @@
+import os
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session
 from typing import Generator
 
-DATABASE_URL = "sqlite:///./src/red_emociones.db"
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+DATABASE_URL = f"sqlite:///{os.path.join(BASE_DIR, 'red_emociones.db')}"
 
 engine = create_engine(
     DATABASE_URL,
@@ -15,9 +17,6 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
 def get_db() -> Generator[Session, None, None]:
-    """
-    Dependency function para FastAPI
-    """
     db = SessionLocal()
     try:
         yield db
@@ -25,9 +24,7 @@ def get_db() -> Generator[Session, None, None]:
         db.close()
 
 def init_database():
-    """
-    Inicializa la base de datos creando todas las tablas
-    """
+    from src.repositories import orm_models
     Base.metadata.create_all(bind=engine)
 
 class Database:
@@ -36,9 +33,6 @@ class Database:
         self._SessionLocal = SessionLocal
 
     def get_session(self) -> Session:
-        """
-        Retorna una sesión de base de datos (para servicios)
-        """
         return self._SessionLocal()
 
 db_singleton = Database()

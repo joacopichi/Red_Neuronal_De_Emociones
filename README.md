@@ -112,3 +112,8 @@ python evaluate.py
 3. Corregir manualmente cuando una emoción esté mal clasificada (se guarda en la BD).
 4. Ejecutar `retrain.py` para reentrenar el modelo con las correcciones acumuladas.
 5. (Opcional) Ejecutar `evaluate.py` para medir el rendimiento del modelo.
+
+
+Con fastapi sin la direccion \src:
+
+uvicorn src.api.app:app --reload
