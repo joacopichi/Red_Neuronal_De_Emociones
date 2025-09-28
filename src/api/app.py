@@ -47,7 +47,6 @@ class FeedbackInput(BaseModel):
     text: str
     predicted_emotion: str
     corrected_emotion: str
-    user_id: Optional[int] = None
 
 class FeedbackResponse(BaseModel):
     message: str
@@ -58,7 +57,6 @@ class FeedbackItem(BaseModel):
     text: str
     emotion: Optional[str] = None
     corrected_emotion: str
-    user_id: Optional[int] = None
     created_at: Optional[str] = None
 
 class FeedbackUpdate(BaseModel):
@@ -184,7 +182,6 @@ async def get_feedback():
                 text=corr.get("text", ""),
                 emotion=None,
                 corrected_emotion=corr.get("correct_emotion", ""),
-                user_id=corr.get("user_id", None),
                 created_at=str(corr.get("created_at", "")) if corr.get("created_at") else None
             )
             for corr in corrections
@@ -228,7 +225,6 @@ async def get_feedback_by_id(feedback_id: int):
             text=correction.get("text"),
             emotion=correction.get("predicted_emotion"),
             corrected_emotion=correction.get("correct_emotion"),
-            user_id=correction.get("user_id")
         )
     except HTTPException:
         raise

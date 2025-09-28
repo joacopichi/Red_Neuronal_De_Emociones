@@ -8,12 +8,11 @@ class CorrectionRepository:
     def __init__(self, db: Session):
         self.db = db
     
-    def save_correction(self, text: str, correct_emotion: str, user_id: Optional[int] = None) -> int:
+    def save_correction(self, text: str, correct_emotion: str) -> int:
         try:
             correction = Correction(
                 text=text,
                 correct_emotion=correct_emotion,
-                user_id=user_id,
                 created_at=datetime.now()
             )
             
@@ -127,16 +126,15 @@ class CorrectionRepository:
                 "recent_activity": []
             }
     
-    def get_corrections_by_user(self, user_id: int) -> List[Correction]:
+    def get_corrections_by_user(self, int) -> List[Correction]:
         try:
             return (
                 self.db.query(Correction)
-                .filter(Correction.user_id == user_id)
                 .order_by(desc(Correction.created_at))
                 .all()
             )
         except Exception as e:
-            print(f"Error al obtener correcciones del usuario {user_id}: {e}")
+            print(f"Error al obtener correcciones del usuario : {e}")
             return []
     
     def get_corrections_by_emotion(self, emotion: str) -> List[Correction]:

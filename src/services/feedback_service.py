@@ -8,12 +8,11 @@ class FeedbackService:
         self.db = db if db else db_singleton.get_session()
         self.correction_repo = CorrectionRepository(self.db)
         
-    def submit(self, texto: str, emocion_correcta: str, user_id: Optional[int] = None) -> int:
+    def submit(self, texto: str, emocion_correcta: str) -> int:
         try:
             correction_id = self.correction_repo.save_correction(
                 text=texto,
                 correct_emotion=emocion_correcta,
-                user_id=user_id
             )
             print(f"✅ Feedback guardado: {texto[:50]}... -> {emocion_correcta}")
             return correction_id
@@ -44,7 +43,6 @@ class FeedbackService:
                     "id": corr.id,
                     "text": corr.text,
                     "correct_emotion": corr.correct_emotion,
-                    "user_id": getattr(corr, 'user_id', None),
                     "created_at": corr.created_at
                 }
                 for corr in corrections
@@ -61,7 +59,6 @@ class FeedbackService:
                     "id": correction.id,
                     "text": correction.text,
                     "correct_emotion": correction.correct_emotion,
-                    "user_id": getattr(correction, 'user_id', None),
                     "created_at": correction.created_at
                 }
             return None
