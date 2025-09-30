@@ -185,7 +185,11 @@ async def root():
 
 
 @app.post("/predict_feedback", response_model=PredictionResponse)
-async def predict_feedback(input_data: TextInput, background_tasks: BackgroundTasks, corrected_emotion: Optional[str] = None):
+async def predict_feedback(
+    input_data: TextInput,
+    background_tasks: BackgroundTasks,
+    corrected_emotion: Optional[str] = None
+):
     if not services_available or not predictor or not feedback_service:
         raise HTTPException(status_code=503, detail="Servicios no disponibles")
     
@@ -195,7 +199,7 @@ async def predict_feedback(input_data: TextInput, background_tasks: BackgroundTa
 
         if corrected_emotion:
             feedback_id = feedback_service.submit(input_data.text, corrected_emotion)
-            background_tasks.add_task(retrain_model_background, epochs=2)
+            background_tasks.add_task(retrain_model_background, epochs=5, from_scratch=False)
 
         return PredictionResponse(
             emotion=emotion,
@@ -252,16 +256,22 @@ async def delete_feedback(feedback_id: int):
     return {"message": "Feedback eliminado correctamente"}
 
 @app.post("/train", response_model=TrainResponse)
-async def train_model(background_tasks: BackgroundTasks, epochs: int = 5, from_scratch: bool = False):
+async def train_model(
+    background_tasks: BackgroundTasks,
+    epochs: int = 50,
+    from_scratch: bool = False
+):
     if not services_available or not predictor:
         raise HTTPException(status_code=503, detail="Servicio de predicción no disponible")
     
-    background_tasks.add_task(retrain_model_background, epochs, from_scratch)
-    return TrainResponse(message="Entrenamiento iniciado en segundo plano", status="started")
+    background_tasks.add_task(retrain_model_background, epochs=epochs, from_scratch=from_scratch)
+    return TrainResponse(message="Entrenamiento completo iniciado en segundo plano", status="started")
 
-def retrain_model_background(epochs: int = 2, from_scratch: bool = False):
+
+def retrain_model_background(epochs: int = 50, from_scratch: bool = False):
     try:
-        print(f"🚀 Reentrenando modelo (epochs={epochs}, from_scratch={from_scratch})")
+        modo = "desde cero" if from_scratch else "incremental"
+        print(f"🚀 Reentrenando modelo ({modo}, epochs={epochs})")
         predictor.entrenar_con_correcciones(epochs=epochs, reentrenar_desde_cero=from_scratch)
         print("✅ Reentrenamiento completado")
     except Exception as e:
