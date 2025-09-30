@@ -116,4 +116,4 @@ python evaluate.py
 
 Con fastapi sin la direccion \src:
 
-uvicorn src.api.app:app --reload
+uvicorn api.main:app --reload
