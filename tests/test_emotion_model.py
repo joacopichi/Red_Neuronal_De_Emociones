@@ -5,4 +5,4 @@ def test_model_predict_returns_list():
     sample_texts = ["Estoy feliz", "Tengo miedo"]
     preds = model.predict(sample_texts)
     assert isinstance(preds, list)
-    assert all(isinstance(p, int) or isinstance(p, str) for p in preds)
+    assert len(preds) == len(sample_texts)

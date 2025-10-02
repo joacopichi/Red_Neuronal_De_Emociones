@@ -1,8 +1,10 @@
 from src.services.predictor_service import PredictorService
 
-def test_predictor_service_predict():
+def test_predictor_service_predecir():
     service = PredictorService()
     text = "Tengo miedo"
-    prediction = service.predict_text(text)
-    assert prediction is not None
-    assert isinstance(prediction, (list, dict, str))
+    pred, conf = service.predecir(text)
+
+    assert isinstance(pred, str)
+    assert isinstance(conf, float)
+    assert 0.0 <= conf <= 1.0
