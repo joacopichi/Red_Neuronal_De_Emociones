@@ -1,8 +1,8 @@
 from src.model.emotion_model import EmotionModel
 
 def test_model_predict_returns_list():
-    model = EmotionModel()
-    sample_text = ["Estoy feliz"]
-    result = model.predict(sample_text)
-    assert isinstance(result, list)
-    assert len(result) == 1
+    model = EmotionModel(vocab_size=5000, num_classes=6, max_len=100)
+    sample_texts = ["Estoy feliz", "Tengo miedo"]
+    preds = model.predict(sample_texts)
+    assert isinstance(preds, list)
+    assert all(isinstance(p, int) or isinstance(p, str) for p in preds)
