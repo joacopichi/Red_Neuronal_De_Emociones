@@ -178,6 +178,31 @@ El entrenamiento se realiza con los datos tokenizados y las etiquetas codificada
 
 ---
 
+## Ejecución con Docker
+
+Puedes levantar la API fácilmente usando Docker:
+
+```sh
+docker build -t red-emociones .
+docker run -p 8000:8000 red-emociones
+```
+
+Esto expondrá la API en `http://localhost:8000`.
+
+---
+
+## Integración continua (CI)
+
+Este proyecto incluye un flujo de trabajo de GitHub Actions para asegurar calidad y despliegue:
+
+- **Lint:** Verifica la calidad del código con flake8.
+- **Test:** Ejecuta los tests con pytest.
+- **Build:** Construye la imagen Docker.
+
+El flujo se encuentra en `.github/workflows/ci.yml` y se ejecuta automáticamente en cada push o pull request a la rama `main`.
+
+---
+
 ## Flujo típico de uso
 
 1. Ejecutar `main.py` para probar el clasificador por consola.
@@ -186,3 +211,5 @@ El entrenamiento se realiza con los datos tokenizados y las etiquetas codificada
 4. Ejecutar `retrain.py` para reentrenar el modelo con las correcciones acumuladas.
 5. (Opcional) Ejecutar `evaluate.py` para medir el rendimiento del modelo.
 6. (Opcional) Levantar la API con FastAPI para integración con otros sistemas.
+7. (Opcional) Levantar la API con Docker para despliegue sencillo.
+8. (Opcional) Validar calidad y despliegue automático con GitHub Actions.
