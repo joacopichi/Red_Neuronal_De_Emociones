@@ -59,7 +59,7 @@ jobs:
           pip install pytest pytest-cov
 
       - name: Ejecutar tests con cobertura
-        run: pytest tst --cov=src --cov-report=xml --cov-report=html --junitxml=tests-report.xml
+        run: pytest test --cov=src --cov-report=xml --cov-report=html --junitxml=tests-report.xml
 
       - name: Subir reporte de cobertura
         uses: actions/upload-artifact@v4
