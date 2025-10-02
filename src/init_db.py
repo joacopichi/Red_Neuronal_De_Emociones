@@ -1,9 +1,4 @@
 from db.database import db_singleton, Base
-from db.orm_models import (
-    EmotionResult,
-    Correction,
-)
-
 
 def init_db():
     engine = db_singleton.engine
