@@ -3,3 +3,6 @@ numpy
 sqlalchemy>=1.4
 scikit-learn
 pandas
+fastapi
+pytest
+pytest-cov
