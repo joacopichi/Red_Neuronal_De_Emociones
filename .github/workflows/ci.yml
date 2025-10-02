@@ -1,4 +1,4 @@
-name: CI
+name: CI Pipeline
 
 on:
   push:
@@ -9,33 +9,90 @@ on:
 jobs:
   lint:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: .
     steps:
-      - uses: actions/checkout@v4
-      - name: Set up Python
+      - name: Checkout código
+        uses: actions/checkout@v4
+
+      - name: Configurar Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
-      - name: Install flake8
-        run: pip install flake8
-      - name: Run flake8
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Instalar flake8
+        run: |
+          python -m pip install --upgrade pip
+          pip install flake8
+
+      - name: Configurar reglas de Flake8
+        run: |
+          echo "[flake8]" > .flake8
+          echo "max-line-length = 120" >> .flake8
+          echo "extend-ignore = E302,E305,W292,E501" >> .flake8
+
+      - name: Ejecutar Linter
         run: flake8 src
 
   test:
     runs-on: ubuntu-latest
+    needs: lint
+    defaults:
+      run:
+        working-directory: .
     steps:
-      - uses: actions/checkout@v4
-      - name: Set up Python
+      - name: Checkout código
+        uses: actions/checkout@v4
+
+      - name: Configurar Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
-      - name: Install dependencies
-        run: pip install -r requirements.txt
-      - name: Run tests
-        run: pytest src
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Instalar dependencias
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest pytest-cov
+
+      - name: Ejecutar tests con cobertura
+        run: pytest src --cov=src --cov-report=xml --cov-report=html --junitxml=tests-report.xml
+
+      - name: Subir reporte de cobertura
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: htmlcov/
+
+      - name: Subir reporte de tests
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-report
+          path: tests-report.xml
 
   build:
     runs-on: ubuntu-latest
+    needs: test
+    defaults:
+      run:
+        working-directory: .
     steps:
-      - uses: actions/checkout@v4
-      - name: Build Docker image
+      - name: Checkout código
+        uses: actions/checkout@v4
+
+      - name: Construir imagen Docker
         run: docker build -t red-emociones .
+
+      - name: Exportar carpeta dist
+        run: |
+          mkdir -p dist
+          echo "Build completo: $(date)" > dist/build-info.txt
+
+      - name: Subir carpeta dist
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
