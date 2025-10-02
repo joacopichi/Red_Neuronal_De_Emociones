@@ -11,52 +11,74 @@ La arquitectura es modular y sigue principios de ingeniería de software como SO
 ## Estructura del Proyecto
 
 ```.
-
-src/
-│   config.py              # Configuración general del sistema
-│   evaluate.py            # Script para evaluar el modelo con 
-│   init_db.py             # Inicializa la base de datos SQLite
-│   main.py                # Interfaz por consola para 
-│   modelo.keras           # Modelo inicial guardado
-│   red_emociones.db       # Base de datos SQLite con 
-│   retrain.py             # Script para reentrenar el modelo 
+Red_Neuronal_De_Emociones/
 │
-├───data/
-│   base_data.py           # Dataset base de entrenamiento y 
+├── requirements.txt                # Dependencias del proyecto
+├── Dockerfile                      # Imagen Docker para despliegue
+├── README.md                       # Documentación principal
 │
-├───db/
-│   database.py            # Gestión de la conexión a la base
-│   orm_models.py          # Modelos ORM para la base de datos
+├── .github/
+│   └── workflows/
+│       └── ci.yml                  # Flujo de integración continua (lint, test, build)
 │
-├───model/
-│   emotion_model.py       # Definición de la red neuronal
-│   tokenizer_manager.py   # Gestión y persistencia del 
+├── src/
+│   ├── config.py                   # Configuración global del sistema
+│   ├── evaluate.py                 # Script para evaluar el modelo con datos de prueba
+│   ├── init_db.py                  # Inicializa la base de datos SQLite
+│   ├── main.py                     # Interfaz por consola para probar el clasificador
+│   ├── modelo.keras                # Archivo del modelo inicial guardado
+│   ├── red_emociones.db            # Base de datos SQLite con correcciones y predicciones
+│   ├── retrain.py                  # Script para reentrenar el modelo con feedback del usuario
+│   │
+│   ├── data/
+│   │   └── base_data.py            # Dataset base de entrenamiento y pruebas
+│   │
+│   ├── db/
+│   │   ├── __init__.py             # Inicialización del módulo db
+│   │   ├── database.py             # Gestión de la conexión a la base de datos (singleton)
+│   │   └── orm_models.py           # Modelos ORM para la base de datos
+│   │
+│   ├── model/
+│   │   ├── __init__.py             # Inicialización del módulo model
+│   │   ├── emotion_model.py        # Definición de la red neuronal y lógica de predicción
+│   │   └── tokenizer_manager.py    # Gestión y persistencia del tokenizer
+│   │
+│   ├── repositories/
+│   │   ├── __init__.py             # Inicialización del módulo repositories
+│   │   ├── base_repository.py      # Repositorio base para operaciones genéricas en la BD
+│   │   ├── correction_repository.py# Manejo de correcciones de usuarios
+│   │   └── emotion_repository.py   # Manejo de predicciones guardadas
+│   │
+│   ├── saved/
+│   │   ├── emotion_model.keras     # Modelo entrenado persistido
+│   │   └── tokenizer.pkl           # Tokenizer guardado para uso consistente
+│   │
+│   ├── services/
+│   │   ├── __init__.py             # Inicialización del módulo services
+│   │   ├── feedback_service.py     # Lógica para gestionar feedback y correcciones
+│   │   └── predictor_service.py    # Servicio principal de predicción y entrenamiento
+│   │
+│   └── api/
+│       ├── __init__.py             # Inicialización del módulo api
+│       ├── config.py               # Configuración específica de la API
+│       ├── dependencies.py         # Inyección de dependencias para la API
+│       ├── main.py                 # Punto de entrada de la API FastAPI
+│       ├── schemas.py              # Esquemas de datos para la API
+│       ├── utils.py                # Funciones utilitarias para la API
+│       └── routes/
+│           ├── feedback.py         # Rutas para feedback/correcciones
+│           ├── health.py           # Ruta de salud del sistema
+│           ├── prediction.py       # Rutas de predicción de emociones
+│           ├── root.py             # Ruta raíz de la API
+│           └── training.py         # Rutas para reentrenamiento del modelo
 │
-├───repositories/
-│   base_repository.py        # Repositorio base para 
-│   correction_repository.py  # Manejo de correcciones de 
-│   emotion_repository.py     # Manejo de predicciones guardadas
-│
-├───saved/
-│   emotion_model.keras    # Modelo entrenado persistido
-│   tokenizer.pkl          # Tokenizer guardado para uso 
-│
-├───services/
-│   feedback_service.py    # Lógica para gestionar feedback y 
-│   predictor_service.py   # Servicio principal de predicción y 
-│
-├───api/
-│   main.py                # Punto de entrada para la API 
-│   config.py              # Configuración específica de la API
-│   dependencies.py        # Inyección de dependencias para la 
-│   schemas.py             # Esquemas de datos para la API
-│   utils.py               # Utilidades varias para la API
-│   routes/
-│       feedback.py        # Rutas para feedback/correcciones
-│       health.py          # Ruta de salud del sistema
-│       prediction.py      # Rutas de predicción de emociones
-│       root.py            # Ruta raíz de la API
-│       training.py        # Rutas para reentrenamiento
+├── tests/
+│   ├── __init__.py                 # Inicialización del módulo tests
+│   ├── test_emotion_model.py       # Pruebas unitarias para emotion_model
+│   ├── test_predictor_service.py   # Pruebas unitarias para predictor_service
+│   ├── test_feedback_service.py    # Pruebas unitarias para feedback_service
+│   ├── test_database.py            # Pruebas unitarias para la conexión a la base de datos
+│   └── test_api_routes.py          # Pruebas de integración para las rutas de la API
 ```
 
 ---
@@ -213,3 +235,26 @@ El flujo se encuentra en `.github/workflows/ci.yml` y se ejecuta automáticament
 6. (Opcional) Levantar la API con FastAPI para integración con otros sistemas.
 7. (Opcional) Levantar la API con Docker para despliegue sencillo.
 8. (Opcional) Validar calidad y despliegue automático con GitHub Actions.
+
+---
+
+## Pruebas automáticas
+
+Las pruebas unitarias y de integración se encuentran en la carpeta `tests/`.  
+Para ejecutarlas, usa:
+
+```sh
+pytest tests
+```
+
+Los principales módulos testeados son:
+
+- `model/emotion_model.py`
+- `services/predictor_service.py`
+- `services/feedback_service.py`
+- `db/database.py`
+- `api/routes/*.py`
+
+La integración continua ejecuta automáticamente estos tests en cada push o pull request.
+
+---
