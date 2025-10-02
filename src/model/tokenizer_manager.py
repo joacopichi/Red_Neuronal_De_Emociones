@@ -10,17 +10,15 @@ class TokenizerManager:
         self.tokenizer_path = tokenizer_path
 
         if frases:
-            # Si se pasan frases, creamos y entrenamos un nuevo tokenizador
             self.tokenizer = Tokenizer(num_words=VOCAB_SIZE, oov_token="<OOV>")
             self.tokenizer.fit_on_texts(frases)
-            self.save()  # Guardamos al crearlo
+            self.save()
         else:
-            # Intentamos cargar un tokenizador existente
             self.tokenizer = self.load()
 
     def preparar(self, textos):
         secuencias = self.tokenizer.texts_to_sequences(textos)
-        return pad_sequences(secuencias, maxlen=MAX_LEN, padding='post')
+        return pad_sequences(secuencias, maxlen=MAX_LEN, padding="post")
 
     def save(self):
         """Guarda el tokenizador en un archivo pickle"""
@@ -35,5 +33,7 @@ class TokenizerManager:
             with open(self.tokenizer_path, "rb") as f:
                 print(f"📂 Tokenizer cargado desde {self.tokenizer_path}")
                 return pickle.load(f)
-        print("⚠️ No se encontró un tokenizador guardado. Necesitás entrenar uno nuevo con frases base.")
+        print(
+            "⚠️ No se encontró un tokenizador guardado. Necesitás entrenar uno nuevo con frases base."
+        )
         return None

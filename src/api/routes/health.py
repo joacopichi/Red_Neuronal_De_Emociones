@@ -5,6 +5,7 @@ from db.database import db_singleton
 
 router = APIRouter()
 
+
 @router.get("/")
 async def health_check():
     return {
@@ -14,5 +15,5 @@ async def health_check():
             "feedback": FeedbackService() is not None,
             "database": db_singleton is not None,
         },
-        "version": "1.0.0"
+        "version": "1.0.0",
     }

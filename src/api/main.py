@@ -5,7 +5,7 @@ from api.routes import root, prediction, feedback, training, health
 app = FastAPI(
     title="API de Red Neuronal de Emociones",
     description="Predice emociones, permite corrección y reentrenamiento",
-    version="1.0.0"
+    version="1.0.0",
 )
 
 app.add_middleware(
@@ -24,4 +24,5 @@ app.include_router(health.router, prefix="/health", tags=["Health"])
 
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run(app, host="0.0.0.0", port=8000, reload=True)

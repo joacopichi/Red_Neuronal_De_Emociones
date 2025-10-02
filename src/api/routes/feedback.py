@@ -8,13 +8,16 @@ router = APIRouter()
 feedback_service = FeedbackService()
 predictor_service = PredictorService()
 
+
 @router.get("/", response_model=List[FeedbackItem])
 async def get_feedback():
     corrections = feedback_service.get_recent_feedback(limit=100)
     result = []
 
     for corr in corrections:
-        pred, _ = predictor_service.predecir(corr["text"]) if corr.get("text") else ("", 0.0)
+        pred, _ = (
+            predictor_service.predecir(corr["text"]) if corr.get("text") else ("", 0.0)
+        )
 
         result.append(
             FeedbackItem(
@@ -22,14 +25,19 @@ async def get_feedback():
                 text=corr.get("text", ""),
                 predicted_emotion=pred,
                 corrected_emotion=corr.get("correct_emotion", ""),
-                created_at=str(corr.get("created_at")) if corr.get("created_at") else None
+                created_at=(
+                    str(corr.get("created_at")) if corr.get("created_at") else None
+                ),
             )
         )
     return result
 
+
 @router.put("/{feedback_id}", response_model=FeedbackItem)
 async def update_feedback(feedback_id: int, update_data: FeedbackUpdate):
-    success = feedback_service.update_correction(feedback_id, update_data.corrected_emotion)
+    success = feedback_service.update_correction(
+        feedback_id, update_data.corrected_emotion
+    )
     if not success:
         raise HTTPException(status_code=404, detail="Feedback no encontrado")
 
@@ -41,8 +49,11 @@ async def update_feedback(feedback_id: int, update_data: FeedbackUpdate):
         text=updated.get("text", ""),
         predicted_emotion=pred,
         corrected_emotion=updated.get("correct_emotion", ""),
-        created_at=str(updated.get("created_at")) if updated.get("created_at") else None
+        created_at=(
+            str(updated.get("created_at")) if updated.get("created_at") else None
+        ),
     )
+
 
 @router.delete("/{feedback_id}")
 async def delete_feedback(feedback_id: int):

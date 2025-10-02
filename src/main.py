@@ -3,7 +3,9 @@ from services.predictor_service import PredictorService
 if __name__ == "__main__":
     ps = PredictorService()
 
-    print("Escribe frases para predecir emociones (ira, tristeza, felicidad, sorpresa, miedo, neutral).")
+    print(
+        "Escribe frases para predecir emociones (ira, tristeza, felicidad, sorpresa, miedo, neutral)."
+    )
     print("Escribe 'salir' para terminar.\n")
 
     while True:
@@ -18,7 +20,13 @@ if __name__ == "__main__":
 
         ok = input("¿Es correcta la emoción? (s/n): ").strip().lower()
         if ok == "n":
-            correcta = input("¿Cuál es la emoción correcta? (ira, tristeza, felicidad, sorpresa, miedo, neutral): ").strip().lower()
+            correcta = (
+                input(
+                    "¿Cuál es la emoción correcta? (ira, tristeza, felicidad, sorpresa, miedo, neutral): "
+                )
+                .strip()
+                .lower()
+            )
             ps.corregir(texto, correcta)
             print("✅ Corrección guardada y modelo ajustado.\n")
         else:

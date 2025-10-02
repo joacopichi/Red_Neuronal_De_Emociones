@@ -7,14 +7,12 @@ from typing import Generator
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATABASE_URL = f"sqlite:///{os.path.join(BASE_DIR, 'red_emociones.db')}"
 
-engine = create_engine(
-    DATABASE_URL,
-    connect_args={"check_same_thread": False}
-)
+engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 Base = declarative_base()
+
 
 def get_db() -> Generator[Session, None, None]:
     db = SessionLocal()
@@ -23,9 +21,10 @@ def get_db() -> Generator[Session, None, None]:
     finally:
         db.close()
 
+
 def init_database():
-    from src.repositories import orm_models
     Base.metadata.create_all(bind=engine)
+
 
 class Database:
     def __init__(self):
@@ -34,5 +33,6 @@ class Database:
 
     def get_session(self) -> Session:
         return self._SessionLocal()
+
 
 db_singleton = Database()

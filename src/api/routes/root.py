@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 from fastapi.responses import HTMLResponse
-from api.dependencies import services_available 
+from api.dependencies import services_available
 
 router = APIRouter()
 
