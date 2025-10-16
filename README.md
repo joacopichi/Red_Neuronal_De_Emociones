@@ -23,12 +23,15 @@ Red_Neuronal_De_Emociones/
 │
 ├── src/
 │   ├── config.py                   # Configuración global del sistema
-│   ├── evaluate.py                 # Script para evaluar el modelo con datos de prueba
 │   ├── init_db.py                  # Inicializa la base de datos SQLite
-│   ├── main.py                     # Interfaz por consola para probar el clasificador
 │   ├── modelo.keras                # Archivo del modelo inicial guardado
 │   ├── red_emociones.db            # Base de datos SQLite con correcciones y predicciones
-│   ├── retrain.py                  # Script para reentrenar el modelo con feedback del usuario
+│   │
+│   ├── terminal/
+│   │   ├── __init__.py             # Inicialización del módulo terminal
+│   │   ├── main.py                 # Interfaz por consola para probar el clasificador
+│   │   ├── retrain.py              # Script para reentrenar el modelo con feedback del usuario
+│   │   └── evaluate.py             # Script para evaluar el modelo con datos de prueba
 │   │
 │   ├── data/
 │   │   └── base_data.py            # Dataset base de entrenamiento y pruebas
@@ -86,14 +89,15 @@ Red_Neuronal_De_Emociones/
 ## Uso de Carpetas y Archivos
 
 - **config.py**: Configuración global del sistema.
-- **evaluate.py**: Evalúa el modelo con datos de prueba.
 - **init_db.py**: Inicializa la base de datos SQLite.
-- **main.py**: Interfaz por consola para probar el clasificador.
 - **modelo.keras**: Modelo inicial guardado.
 - **red_emociones.db**: Base de datos SQLite con correcciones y predicciones.
-- **retrain.py**: Script para reentrenar el modelo con feedback del usuario.
 
 **Carpetas:**
+-**terminal/**: Scripts de consola para interacción, reentrenamiento y evaluación del modelo:
+  -`main.py`: Interfaz por consola para probar el clasificador.
+  -`retrain.py`: Script para reentrenar el modelo con feedback del usuario.
+  -`evaluate.py`: Script para evaluar el modelo con datos de prueba.
 -**data/**: Contiene el dataset base para entrenamiento y prueba.
 -**db/**: Gestión y modelos ORM de la base de datos.
 -**model/**: Definición de la red neuronal y manejo del tokenizer.
@@ -123,13 +127,22 @@ cd src
 python init_db.py
 ```
 
-### 3. Ejecutar el programa principal (consola)
+### 3. Ejecutar los scripts de consola
 
-Para probar predicciones en frases:
+Ubícate en la carpeta `src` para ejecutar los scripts de consola usando el flag `-m` y el módulo `terminal`:
 
-```sh
-python main.py
-```
+- Para probar predicciones en frases:
+  .```sh
+  python -m terminal.main
+  .```
+- Para reentrenar el modelo con correcciones:
+  .```sh
+  python -m terminal.retrain
+  .```
+- Para evaluar el modelo:
+  .```sh
+  python -m terminal.evaluate
+  .```
 
 ### 4. Ejecutar la API con FastAPI
 
@@ -137,22 +150,6 @@ Desde la raíz del proyecto (sin la carpeta `src` en la ruta):
 
 ```sh
 uvicorn api.main:app --reload
-```
-
-### 5. Reentrenar el modelo con correcciones
-
-Si has agregado feedback en la base de datos:
-
-```sh
-python retrain.py
-```
-
-### 6. Evaluar el modelo
-
-Con el dataset de prueba definido en `data/base_data.py` y con la base de datos:
-
-```sh
-python evaluate.py
 ```
 
 ---
@@ -182,7 +179,7 @@ El modelo se compila usando el optimizador Adam, la función de pérdida `catego
 
 ### Entrenar
 
-El entrenamiento se realiza con los datos tokenizados y las etiquetas codificadas, especificando el número de épocas y el tamaño de lote. Este proceso puede repetirse utilizando el script `retrain.py` para incorporar nuevas correcciones y mejorar el rendimiento del modelo.
+El entrenamiento se realiza con los datos tokenizados y las etiquetas codificadas, especificando el número de épocas y el tamaño de lote. Este proceso puede repetirse utilizando el script `terminal/retrain.py` para incorporar nuevas correcciones y mejorar el rendimiento del modelo.
 
 ---
 
