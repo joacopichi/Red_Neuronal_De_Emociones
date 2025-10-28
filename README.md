@@ -146,7 +146,7 @@ Ubícate en la carpeta `src` para ejecutar los scripts de consola usando el flag
 
 ### 4. Ejecutar la API con FastAPI
 
-Desde la raíz del proyecto (sin la carpeta `src` en la ruta):
+Desde la raíz del proyecto `src`:
 
 ```sh
 uvicorn api.main:app --reload
